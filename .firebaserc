@@ -1,0 +1,11 @@
+{
+  "targets": {
+    "githubdata-6209c": {
+      "hosting": {
+        "solvingApp": [
+          "githubdata-6209c"
+        ]
+      }
+    }
+  }
+}

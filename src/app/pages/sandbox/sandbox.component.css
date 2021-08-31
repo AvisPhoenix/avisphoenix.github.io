@@ -1,0 +1,23 @@
+.info{
+    max-height: 30vh;
+    overflow-y: auto;
+}
+.buttons {
+    height: 36px;
+    overflow: auto;
+}
+
+.output{
+    height: 100px;
+    overflow-y: auto;
+}
+
+
+@media only screen and (min-width: 601px){
+    .info{
+        max-height: 60vh;
+    }
+    .output{
+        height: calc(40vh - 72px);
+    }
+}
