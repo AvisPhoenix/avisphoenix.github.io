@@ -43,7 +43,7 @@ export class AuthService {
       this.changeAuthStatus.emit(this.isSignIn());
       this.sendMessage(sendMessage,'sucess', 'Sign-out Sucessfully!');
     }).catch((error)=>{
-      this.sendMessage(sendMessage,'error', 'Sign-out error:' + error.toString());
+      this.sendMessage(sendMessage,'error', 'Sign-out error:' + error? error.toString(): 'Unknown');
     });
   }
 
@@ -60,7 +60,7 @@ export class AuthService {
         this.changeAuthStatus.emit(this.isSignIn());
         this.sendMessage(sendMessage,'sucess','Sign-in Sucessfully!');
       }).catch((error)=>{
-        this.sendMessage(sendMessage,'error','Sign-in error:' + error.toString());
+        this.sendMessage(sendMessage,'error','Sign-in error:' + error? error.toString() : 'Unknown');
       });
     }
   }

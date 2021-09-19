@@ -103,16 +103,16 @@ export class SendCodeModalComponent implements OnDestroy {
 
   private onError(error:any){
     this.onSending = false;
-    this.errorMessage = "Error: " + error.toString();
-    console.error('While loading doc: ' + error.toString());
+    this.errorMessage = "Error: " + error? error.toString(): 'Unknown';
+    console.error('While loading doc: ' + error? error.toString(): 'Unknown');
   }
 
   private addDataDB(doc: AngularFirestoreDocument<UserData>){
     doc.set(this.buildItemDB()).then((result)=>{
       this.onSavedSucessfully();
     }).catch((error)=>{
-      console.error('While adding doc: ' + error.toString());
-      this.onWrongSave('Error while creating a new entry: ' + (error['message']?error['message']:error.toString()));
+      console.error('While adding doc: ' + error? error.toString(): 'Unknown');
+      this.onWrongSave('Error while creating a new entry: ' + (error && error['message']?error['message']:(error? error.toString(): 'Unknown')));
     });
   }
 
@@ -120,8 +120,8 @@ export class SendCodeModalComponent implements OnDestroy {
     data.fullName = this.cryptService.set(this.authService.getAuthSessionToken(),this.userDataForm.get('name')?.value);
     data.codeSendIt.push(this.buildCodeData());
     doc.update(data).then((result)=>{ this.onSavedSucessfully()}).catch((error)=>{
-      console.error('While updating doc: ' + error?error.toString():"NULL");
-      this.onWrongSave('Error while updating a entry: ' + (error['message']?error['message']:error.toString()))
+      console.error('While updating doc: ' + error?error.toString():"Unknown");
+      this.onWrongSave('Error while updating a entry: ' + (error && error['message']?error['message']:(error? error.toString(): 'Unknown')))
     });
   }
 
