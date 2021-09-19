@@ -1,0 +1,14 @@
+<div class="collection" *ngIf="users">
+    <a (click)="selectUser(item)" class="collection-item" *ngFor="let item of users">
+        <div class="row valign-wrapper">
+            <div class="col s10">
+                <span class="title">{{ item.fullName }}</span>
+                <p>{{ item.lastUpdate | date: 'd/MMMM/y hh:mm:ss' }}<br/>{{ item.email }}</p>
+            </div>
+            <div class="col s2 ">
+                <fa-icon [icon]="nextIcon" class="secondary-content"></fa-icon>
+            </div>
+        </div>
+    </a>
+</div>
+<app-loading-animation *ngIf="!users"></app-loading-animation>

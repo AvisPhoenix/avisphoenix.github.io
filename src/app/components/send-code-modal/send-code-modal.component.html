@@ -1,0 +1,42 @@
+<app-modal-window [(show)]="showModal" (onClose)="onClose()" (showChange)="showModalChange.emit(showModal)" >
+    <div class="modal-content">
+        <ng-container *ngIf="onSendData && !errorMessage">
+            <h3>Who are you?</h3>
+            <p>Please give me some information about you:</p>
+            <div class="row" [formGroup]="userDataForm">
+                <div class="input-field col s12">
+                    <fa-icon [icon]="faUser" class="prefix"></fa-icon>
+                    <input id="name" type="text" class="validate" formControlName="name">
+                    <label for="name">Full Name</label>
+                </div>
+                <div class="input-field col s12">
+                    <fa-icon [icon]="faAt" class="prefix"></fa-icon>
+                    <input id="email" type="email" class="validate" formControlName="email">
+                    <label for="email">E-mail</label>
+                    <span class="helper-text" data-error="Invalid e-mail"></span>
+                </div>
+            </div>
+        </ng-container>
+        <ng-container *ngIf="onSending">
+            <app-loading-animation></app-loading-animation>
+        </ng-container>
+        <ng-container *ngIf="!onSending && errorMessage">
+            <div class="row red-text text-darken-4">
+                <div class="col s12 center-align">
+                    <fa-icon [icon]="errorIcon"></fa-icon>
+                </div>
+                <div class="col s12">
+                    <p>{{ errorMessage }}</p>
+                </div>
+            </div>
+        </ng-container>
+    </div>
+    <div class="modal-footer">
+        <button class="waves-effect waves-red btn-flat" *ngIf="!onSending && errorMessage" (click)="retry()" >
+            Send
+        </button>
+        <button class="waves-effect waves-purple btn-flat" *ngIf="onSendData && !errorMessage" (click)="sendData()" [disabled]="userDataForm.invalid">
+            Send
+        </button>
+    </div>
+</app-modal-window>

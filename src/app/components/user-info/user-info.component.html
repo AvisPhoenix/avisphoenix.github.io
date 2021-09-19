@@ -1,0 +1,17 @@
+<app-floating-action-button *ngIf="showFAB" [options]="{ 'direction': 'bottom' }" [position]="{ top: '10px', right: '10px' }">
+    <a title="userName" class="btn-floating btn-large purple darken-4 purple-text text-lighten-5">
+        <fa-icon [icon]="userIcon" size="lg"></fa-icon>
+    </a>
+    <ul>
+        <li *ngFor="let menu of extraMenus; trackBy: trackMenu">
+            <a [title]="menu.title" class="btn-floating purple darken-4 purple-text text-lighten-5" (click)="menu.clickFn()">
+                <fa-icon [icon]="menu.icon" ></fa-icon>
+            </a>
+        </li>
+        <li>
+            <a class="btn-floating purple darken-4 purple-text text-lighten-5" (click)="logout()">
+                <fa-icon [icon]="logoutIcon" ></fa-icon>
+            </a>
+        </li>
+    </ul>
+</app-floating-action-button>

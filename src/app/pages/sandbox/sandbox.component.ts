@@ -1,77 +1,68 @@
 import { HttpClient } from '@angular/common/http';
-import { AfterViewInit, Component, ElementRef, Input, OnChanges, OnDestroy, OnInit, SimpleChanges, ViewChild } from '@angular/core';
-import { FormControl, FormGroup, Validators } from '@angular/forms';
+import { Component, Input, OnChanges, OnDestroy, OnInit, SimpleChanges, ViewChild } from '@angular/core';
 import { DomSanitizer } from '@angular/platform-browser';
-import { faPlay, faVial, faPaperPlane, faTrash, faHourglassStart, faHourglassHalf, faHourglassEnd, faUser, faAt } from '@fortawesome/free-solid-svg-icons'
-import { AngularFirestore, AngularFirestoreCollection, AngularFirestoreDocument } from '@angular/fire/compat/firestore';
-import { Observable, Subscription } from 'rxjs';
-
-declare var M: any;
+import { faPlay, faVial, faPaperPlane, faTrash, faHourglassStart, faHourglassHalf, faHourglassEnd, faCode } from '@fortawesome/free-solid-svg-icons'
+import { Subscription } from 'rxjs';
+import { AuthService } from 'src/app/services/auth.service';
+import { DisplayMessagesService } from 'src/app/services/display-messages.service';
+import { ActivatedRoute } from '@angular/router';
+import { MenuManagerService } from 'src/app/services/menu-manager.service';
 
 @Component({
   selector: 'app-sandbox',
   templateUrl: './sandbox.component.html',
   styleUrls: ['./sandbox.component.css']
 })
-export class SandboxComponent implements OnInit, OnChanges, AfterViewInit, OnDestroy {
+export class SandboxComponent implements OnInit, OnChanges, OnDestroy {
 
   @Input() basicCode:string = "";
   @Input() basicFunction:string = "";
+  @Input() problemName:string = "";
   @Input() summary: string = '';
   @Input() testFunctions: Array<Function> = [];
   @Input() jsonFile: string = 'childrenString.json';
-
-  @ViewChild('sendModal') sendModalHTML!: ElementRef<any>;
 
   faPlay = faPlay;
   faVial = faVial;
   faPaperPlane = faPaperPlane;
   faTrash = faTrash;
-  faUser = faUser;
-  faAt = faAt;
   timeIcon = faHourglassStart;
   time: number = 30;
   timeUnit: string = 'minutes';
   outputText: string = '';
   codeCreated: string = '';
   atLeastTestedOneTime: boolean = false;
+  startedDate: Date = new Date();
   
   //States
   onRunTesting: boolean = false;
   onOutOfTime: boolean = false;
   onTest: boolean = false;
-  onSendData: boolean = false;
-  alreadySendIt: boolean = false;
   onLoading: boolean = false;
   onSending: boolean = false;
   onOpenMode: boolean = false;
+  onSelectionCode: boolean = false;
 
-  //form
-  userDataForm = new FormGroup({
-    name: new FormControl('', Validators.required),
-    email: new FormControl('', [Validators.required, Validators.email, Validators.pattern("[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?")])
-  });
+  getUserInfo: boolean = false;
 
   private alreadyJSONLoaded:boolean = false;
   private currentInterval: number = 0;
-  private startedDate: Date = new Date();
   private scriptEle: HTMLScriptElement | undefined;
-  private sendModal: any;
-  private codesSended: AngularFirestoreCollection<UserData>;
   private subscriptions: Subscription = new Subscription();
+  private subscribeLogin: Subscription = new Subscription();
   
-  constructor(public sanitizer: DomSanitizer, private http: HttpClient, private firestore: AngularFirestore ) {
-    this.codesSended = firestore.collection<UserData>('usorisNotitia');
+  constructor(public sanitizer: DomSanitizer,
+              private http: HttpClient,
+              private authService: AuthService,
+              private toastService: DisplayMessagesService,
+              private route: ActivatedRoute,
+              private menuMgr: MenuManagerService ) {
+    
   }
 
   ngOnDestroy(): void {
     this.subscriptions.unsubscribe();
-  }
-
-  ngAfterViewInit(): void {
-    if (this.sendModalHTML){
-      this.sendModal = M.Modal.init(this.sendModalHTML.nativeElement);
-    }
+    this.menuMgr.deleteMenu('loadCode');
   }
 
   ngOnChanges(changes: SimpleChanges): void {
@@ -88,6 +79,34 @@ export class SandboxComponent implements OnInit, OnChanges, AfterViewInit, OnDes
     if (!this.alreadyJSONLoaded){
       this.loadJSONFile();
     }
+    this.subscriptions.add(this.route.paramMap.subscribe((params)=>{
+      if (params.get('opt')== 'load'){
+        if (this.authService.isSignIn()){
+          this.onSelectionCode = true;
+        } else {
+          this.authService.showLogInModal(true);
+          this.subscribeLogin = this.authService.changeAuthStatus.subscribe((logged)=>{
+            if (logged){
+              this.onSelectionCode = true;
+              this.subscribeLogin.unsubscribe();
+            }
+          });
+        }
+      } else {
+        this.onOpenMode = false;
+      }
+    }));
+
+    this.subscriptions.add(this.authService.cancelModal.subscribe(()=>{
+      this.reset();
+    }));
+
+    this.menuMgr.addMenu({
+      id: 'loadCode',
+      title: 'Load another code',
+      clickFn: ()=>{this.onSelectionCode = true;},
+      icon: faCode
+    });
   }
 
   startSandbox(){
@@ -135,7 +154,7 @@ export class SandboxComponent implements OnInit, OnChanges, AfterViewInit, OnDes
       this.outputText = 'Starting Tests... <br>';
       this.runTest(0);
     } else {
-       M.toast({html: 'Error: There is no commonString function.' , classes: 'red darken-1', displayLength: 1*60*1000});
+      this.toastService.showErrorMessage('Error: There is no commonString function.');
     }
   }
 
@@ -171,84 +190,30 @@ export class SandboxComponent implements OnInit, OnChanges, AfterViewInit, OnDes
   }
 
   openSendModal(){
-    this.onSendData = true;
-    this.sendModal && this.sendModal.open();
+    this.getUserInfo = true;
   }
 
-  sendData(){
-    this.sendModal.close();
-    let uID = this.buildUniqueName(this.userDataForm.get('email')?.value);
-    let doc = this.codesSended.doc(uID).valueChanges();
-    this.onSending = true;
-    this.subscriptions.add(doc.subscribe((data)=>{
-      if (data){
-        this.updateDataDB(this.codesSended.doc(uID), data);
-      }else {
-        this.addDataDB(this.codesSended.doc(uID));
-      }
-    },(error)=>{
-      console.error('While loading doc: ' + error.toString());
-      this.addDataDB(this.codesSended.doc(uID));
-    }));
-    
-  }
-
-  private addDataDB(doc: AngularFirestoreDocument<UserData>){
-    doc.set(this.buildItemDB()).then((result)=>{
-      this.onSavedSucessfully();
-    }).catch((error)=>{
-      console.error('While adding doc: ' + error.toString());
-      this.onWrongSave('Error while creating a new entry: ' + (error['message']?error['message']:error.toString()));
-    });
-  }
-
-  private updateDataDB(doc: AngularFirestoreDocument<UserData>, data: UserData){
-    data.fullName = this.userDataForm.get('name')?.value;
-    data.codeSendIt.push(this.buildCodeData());
-    doc.update(data).then((result)=>{ this.onSavedSucessfully()}).catch((error)=>{
-      console.error('While updating doc: ' + error.toString());
-      this.onWrongSave('Error while updating a entry: ' + (error['message']?error['message']:error.toString()))
-    });
-  }
-
-  private buildItemDB(): UserData{
-    return {
-      "fullName": this.userDataForm.get('name')?.value,
-      "email": this.userDataForm.get('email')?.value,
-      "codeSendIt": [ this.buildCodeData()]
-    };
-  }
-
-  private buildCodeData(): CodeData{
-    return {
-      "code": this.codeCreated,
-      "secondsElapsed": ((new Date()).getTime()-this.startedDate.getTime())/1000,
-      "timeStamp": this.date2TimeStamp(new Date())
-    };
-  }
-
-  private onSavedSucessfully(){
+  onSended(){
+    this.getUserInfo = false;
     this.reset();
-    this.alreadySendIt = true;
-    this.onSending = false;
-    M.toast({html: 'Send it sucessfully. Thanks!' , classes: 'green darken-1', displayLength: 1*60*1000});
   }
 
-
-  private onWrongSave(message: string){
-    this.onSending = false;
-    M.toast({html: message , classes: 'red darken-1', displayLength: 1*60*1000});
+  selectData(codeData: CodeData){
+    this.codeCreated = codeData.code;
+    this.onSelectionCode = false;
+    this.time = codeData.secondsElapsed*1000;
+    this.onOpenMode = true;
+    // To - Do : load specific problem
   }
 
   private reset(){
     this.onRunTesting = false;
     this.onOutOfTime = false;
     this.onTest = false;
-    this.onSendData = false;
-    this.alreadySendIt = false;
     this.onLoading = false;
     this.onSending = false;
     this.onOpenMode = false;
+    this.onSelectionCode = false;
     this.time = 30;
     this.codeCreated = this.basicCode;
   }
@@ -264,6 +229,10 @@ export class SandboxComponent implements OnInit, OnChanges, AfterViewInit, OnDes
     }
   }
 
+  setKeyDown(editor:any){
+    editor.onKeyDown((e:any)=>this.editorKeyDown(e));
+  }
+
   private loadJSONFile(url: string = '/assets/json/'){
     this.http.get(url + this.jsonFile).subscribe( (res: any) => {
       this.basicCode = res['basicCode'];
@@ -275,28 +244,11 @@ export class SandboxComponent implements OnInit, OnChanges, AfterViewInit, OnDes
       });
       this.alreadyJSONLoaded = true;
       this.codeCreated = this.basicCode;
+      this.problemName = res['name'];
     },
       error => { 
-        M.toast({html: 'Error: ' + error['message'] , classes: 'red darken-1', displayLength: 1*60*1000});
+        this.toastService.showErrorMessage('Error: ' + error['message']);
     });
-  }
-
-  private buildUniqueName(email:string): string{
-    let twoParts = email.split('@');
-    if (twoParts.length != 2 ){
-      throw new Error("Invalid e-mail");
-    }
-    twoParts[1] = twoParts[1].replace(/\./g,'');
-    let length = twoParts[0].length + twoParts[1].length;
-    return twoParts[0] + length.toString() + twoParts[1];
-  }
-
-  private date2TimeStamp(date: Date): number{
-    return Math.round(date.getTime()/1000);
-  }
-
-  private timeStamp2Date(timestamp: number): Date{
-    return new Date(timestamp*1000);
   }
 
 }
@@ -310,5 +262,6 @@ export interface UserData{
 export interface CodeData {
   "code": string;
   "timeStamp": number;
-  "secondsElapsed": number
+  "secondsElapsed": number;
+  "problemName": string;
 }

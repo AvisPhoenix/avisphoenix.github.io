@@ -1,0 +1,43 @@
+<app-modal-window [(show)]="showModal" (onClose)="onClose()">
+    <div class="modal-content">
+        <ng-container *ngIf="!onErrorMessage && !loading">
+            <div class="row" [formGroup]="userDataForm">
+                <div class="input-field col s12">
+                    <fa-icon [icon]="faAt" class="prefix"></fa-icon>
+                    <input id="logemail" type="email" class="validate" formControlName="email">
+                    <label for="logemail">E-mail</label>
+                    <span class="helper-text" data-error="Invalid e-mail"></span>
+                </div>
+                <div class="input-field col s12">
+                    <fa-icon [icon]="faKey" class="prefix"></fa-icon>
+                    <input id="logname" type="password" class="validate" formControlName="password">
+                    <label for="logname">Password</label>
+                </div>
+            </div>
+        </ng-container>
+        <ng-container *ngIf="loading">
+            <app-loading-animation></app-loading-animation>
+        </ng-container>
+        <ng-container *ngIf="onErrorMessage">
+            <div class="row red-text text-darken-4">
+                <div class="col s12 center-align">
+                    <fa-icon [icon]="errorIcon" size="10x"></fa-icon>
+                </div>
+                <div class="col s12">
+                    <p>{{ errorMessage }}</p>
+                </div>
+            </div>
+        </ng-container>
+    </div>
+    <div class="modal-footer">
+        <button class="waves-effect waves-red btn-flat" *ngIf="!onErrorMessage && !loading && withCancelBtn" (click)="cancel()">
+            Cancel
+        </button>
+        <button class="waves-effect waves-purple btn-flat" *ngIf="!onErrorMessage && !loading" (click)="logIn()" [disabled]="userDataForm.invalid">
+            Sign In
+        </button>
+        <button class="waves-effect waves-purple btn-flat" *ngIf="onErrorMessage" (click)="retry()" >
+            Retry
+        </button>
+    </div>
+</app-modal-window>

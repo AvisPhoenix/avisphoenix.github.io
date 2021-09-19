@@ -1,0 +1,17 @@
+<div class="collection" *ngIf="codeList">
+    <a (click)="selectCode(item)" class="collection-item" *ngFor="let item of codeList">
+        <div class="row valign-wrapper">
+            <div class="col s10">
+                <span class="title">{{ item.projectName }}</span>
+                <p>
+                    {{ item.creationDate | date: 'd/MMMM/y hh:mm:ss' }} <br/>
+                    {{ item.timeElapse| time: 'hh:MM:ss' }} 
+                </p>
+            </div>
+            <div class="col s2 ">
+                <fa-icon *ngIf="currentSelectedItem == item.realIndex" [icon]="selectedIcon" class="secondary-content"></fa-icon>
+            </div>
+        </div>
+    </a>
+</div>
+<app-loading-animation *ngIf="!codeList"></app-loading-animation>

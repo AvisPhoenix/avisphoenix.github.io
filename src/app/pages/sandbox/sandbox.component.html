@@ -4,14 +4,15 @@
         </div>
         <div class="buttonContainer">
             <div class="buttons">
-                <button class="waves-effect waves-teal btn-flat purple-text text-darken-4" title="Start" (click)="startSandbox()" *ngIf="!onTest">
+                <button class="waves-effect waves-teal btn-flat purple-text text-darken-4" title="Start" (click)="startSandbox()" *ngIf="!onTest && !onOpenMode">
                     <fa-icon [icon]="faPlay"></fa-icon>
                 </button>
-                <span [ngClass]="{'': onOutOfTime}">Left: {{ time }} {{ timeUnit }} <fa-icon [icon]="timeIcon" [pulse]='onTest'></fa-icon> </span>
-                <button class="waves-effect waves-teal btn-flat purple-text text-darken-4" title="Test" *ngIf="onTest" (click)="startTest()">
+                <span *ngIf="!onOpenMode" [ngClass]="{'': onOutOfTime}">Left: {{ time }} {{ timeUnit }} <fa-icon [icon]="timeIcon" [pulse]='onTest'></fa-icon> </span>
+                <span *ngIf="onOpenMode" >Elapsed Time: {{ time | time : 'hh:MM:ss'}}</span>
+                <button class="waves-effect waves-teal btn-flat purple-text text-darken-4" title="Test" *ngIf="onTest || onOpenMode" (click)="startTest()">
                     <fa-icon [icon]="faVial" [pulse]="onRunTesting" ></fa-icon>
                 </button>
-                <button class="waves-effect waves-teal btn-flat purple-text text-darken-4" title="Send" *ngIf="onTest || onRunTesting" (click)="openSendModal()">
+                <button class="waves-effect waves-teal btn-flat purple-text text-darken-4" title="Send" *ngIf="(onTest || onRunTesting) && !onOpenMode" (click)="openSendModal()">
                     <fa-icon [icon]="faPaperPlane"></fa-icon>
                 </button>
             </div>
@@ -27,31 +28,15 @@
     <div class="col s12 m8 l9">
         <ngx-monaco-editor [(ngModel)]="codeCreated"
                            [options]="{theme: 'vs-ligth', language: 'javascript', readOnly: !onTest || onRunTesting}"
-                           (onKeyDown)="editorKeyDown($event)">
+                           (onInit)="setKeyDown($event)"
+                           class="editor">
         </ngx-monaco-editor>
     </div>
 </div>
-
-<div #sendModal class="modal">
-    <div class="modal-content">
-        <h4>Please give me some information about you</h4>
-        <div class="row" [formGroup]="userDataForm">
-            <div class="input-field col s12">
-                <fa-icon [icon]="faUser" class="prefix"></fa-icon>
-                <input id="name" type="text" class="validate" formControlName="name">
-                <label for="name">Full Name</label>
-            </div>
-            <div class="input-field col s12">
-                <fa-icon [icon]="faAt" class="prefix"></fa-icon>
-                <input id="email" type="email" class="validate" formControlName="email">
-                <label for="email">E-mail</label>
-                <span class="helper-text" data-error="Invalid e-mail"></span>
-            </div>
-        </div>
-    </div>
-    <div class="modal-footer">
-        <button class="modal-close waves-effect waves-green btn-flat" *ngIf="onSendData" (click)="sendData()" [disabled]="userDataForm.invalid">
-            Send
-        </button>
-    </div>
-</div>
+<app-send-code-modal [(showModal)]="getUserInfo"
+                     [codeCreated]="codeCreated"
+                     [problemName]="problemName"
+                     [startedDate]="startedDate"
+                     (dataSending)="onSended()"
+></app-send-code-modal>
+<app-code-selection-modal *ngIf="onSelectionCode" (selectedCode)="selectData($event)" (onClose)="onSelectionCode = false;"></app-code-selection-modal>
