@@ -1,4 +1,4 @@
-<app-modal-window [(show)]="showModal" (onClose)="onClose.emit();">
+<app-modal-window [(show)]="showModal" (onClose)="onClose.emit();" (showChange)="showModalChange.emit(showModal)">
     <div class="modal-content">
         <div class="row">
             <div class="col s12">

@@ -44,6 +44,7 @@ export class SandboxComponent implements OnInit, OnChanges, OnDestroy {
   onSelectionCode: boolean = false;
 
   getUserInfo: boolean = false;
+  userLoged: boolean = false;
 
   private alreadyJSONLoaded:boolean = false;
   private currentInterval: number = 0;
@@ -81,11 +82,14 @@ export class SandboxComponent implements OnInit, OnChanges, OnDestroy {
     }
     this.subscriptions.add(this.route.paramMap.subscribe((params)=>{
       if (params.get('opt')== 'load'){
-        if (this.authService.isSignIn()){
+        this.userLoged = this.authService.isSignIn();
+        if (this.userLoged){
           this.onSelectionCode = true;
+          this.userLoged = true;
         } else {
           this.authService.showLogInModal(true);
           this.subscribeLogin = this.authService.changeAuthStatus.subscribe((logged)=>{
+            this.userLoged = logged;
             if (logged){
               this.onSelectionCode = true;
               this.subscribeLogin.unsubscribe();
@@ -94,6 +98,7 @@ export class SandboxComponent implements OnInit, OnChanges, OnDestroy {
         }
       } else {
         this.onOpenMode = false;
+        this.userLoged = false;
       }
     }));
 

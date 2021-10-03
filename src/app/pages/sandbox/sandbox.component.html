@@ -39,4 +39,4 @@
                      [startedDate]="startedDate"
                      (dataSending)="onSended()"
 ></app-send-code-modal>
-<app-code-selection-modal *ngIf="onSelectionCode" (selectedCode)="selectData($event)" (onClose)="onSelectionCode = false;"></app-code-selection-modal>
+<app-code-selection-modal *ngIf="userLoged" (selectedCode)="selectData($event)" [(showModal)]="onSelectionCode"></app-code-selection-modal>

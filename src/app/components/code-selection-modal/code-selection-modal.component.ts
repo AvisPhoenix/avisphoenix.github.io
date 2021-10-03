@@ -1,4 +1,4 @@
-import { Component, EventEmitter, OnDestroy, Output } from '@angular/core';
+import { Component, EventEmitter, Input, OnDestroy, Output } from '@angular/core';
 import { AngularFirestore, AngularFirestoreCollection } from '@angular/fire/compat/firestore';
 import { Subscription } from 'rxjs';
 import { CodeData, UserData } from 'src/app/pages/sandbox/sandbox.component';
@@ -15,10 +15,11 @@ import { UserDetailsData } from '../user-selector/user-selector.component';
 })
 export class CodeSelectionModalComponent implements OnDestroy {
 
+  @Input() showModal: boolean = false;
   @Output() selectedCode: EventEmitter<CodeData> = new EventEmitter<CodeData>();
   @Output() onClose: EventEmitter<void> = new EventEmitter<void>();
-  
-  showModal: boolean = true;
+  @Output() showModalChange: EventEmitter<boolean> = new EventEmitter<boolean>();
+
   onLoading: boolean = true;
 
   collection: Array<UserData> | null = null;
